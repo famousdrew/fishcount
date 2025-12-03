@@ -99,8 +99,47 @@ export function TrendChart({ days }: TrendChartProps) {
         })}
       </div>
 
+      {/* Data Table */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-gray-200">
+              <th className="text-left py-2 px-2 font-medium text-gray-600">Date</th>
+              {(Object.keys(speciesConfig) as SpeciesKey[]).map((species) => (
+                <th
+                  key={species}
+                  className="text-right py-2 px-2 font-medium"
+                  style={{ color: speciesConfig[species].color }}
+                >
+                  {speciesConfig[species].label}
+                </th>
+              ))}
+              <th className="text-right py-2 px-2 font-medium text-gray-900">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {chartData.map((row, idx) => {
+              const total = row.chinook + row.steelhead + row.sockeye + row.coho + row.shad + row.lamprey;
+              return (
+                <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50">
+                  <td className="py-2 px-2 text-gray-700">{row.date}</td>
+                  {(Object.keys(speciesConfig) as SpeciesKey[]).map((species) => (
+                    <td key={species} className="text-right py-2 px-2 tabular-nums">
+                      {row[species].toLocaleString()}
+                    </td>
+                  ))}
+                  <td className="text-right py-2 px-2 font-semibold tabular-nums text-gray-900">
+                    {total.toLocaleString()}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
       {/* Chart */}
-      <div className="h-64 md:h-80">
+      <div className="h-48 md:h-64 mt-6">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
@@ -125,11 +164,6 @@ export function TrendChart({ days }: TrendChartProps) {
                 value.toLocaleString(),
                 speciesConfig[name as SpeciesKey]?.label || name,
               ]}
-            />
-            <Legend
-              formatter={(value: string) =>
-                speciesConfig[value as SpeciesKey]?.label || value
-              }
             />
 
             {(Object.keys(speciesConfig) as SpeciesKey[]).map((species) => {
