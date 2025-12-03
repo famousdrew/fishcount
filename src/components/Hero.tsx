@@ -1,109 +1,46 @@
 'use client';
 
-import { DailyConditions } from '@/lib/types';
-import { ScoreBadge } from './ScoreBadge';
+import { DayForecast } from '@/lib/types';
+import { ForecastCard } from './ForecastCard';
 
 interface HeroProps {
-  conditions: DailyConditions | null;
+  forecast: DayForecast[];
   recommendation: string;
   lastUpdated: string;
+  flowCfs: number | null;
 }
 
-export function Hero({ conditions, recommendation, lastUpdated }: HeroProps) {
-  if (!conditions) {
+export function Hero({ forecast, recommendation, lastUpdated, flowCfs }: HeroProps) {
+  if (forecast.length === 0) {
     return (
       <section className="bg-gradient-to-b from-blue-50 to-white p-6 md:p-8 rounded-xl">
-        <p className="text-gray-500">Loading current conditions...</p>
+        <p className="text-gray-500">Loading forecast...</p>
       </section>
     );
   }
 
-  const { score, waterFlow, tide, sun, weather, fishCount } = conditions;
-
-  // Get water temp from USGS or DART
-  const waterTempF = waterFlow?.waterTempF ?? (fishCount.waterTempC ? (fishCount.waterTempC * 9) / 5 + 32 : null);
-
   return (
-    <section className="bg-gradient-to-b from-blue-50 to-white p-6 md:p-8 rounded-xl">
+    <section className="bg-gradient-to-b from-blue-50 to-white p-4 md:p-6 rounded-xl">
       <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-4">
-        Current Conditions
+        3-Day Fishing Forecast
       </h2>
 
-      {/* Main metrics grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6">
-        {/* Score badge - largest element */}
-        <div className="flex flex-col items-center justify-center p-6 bg-white rounded-xl shadow-sm">
-          <ScoreBadge status={score.status} size="lg" />
-          <p className="mt-2 text-sm text-gray-500">
-            {score.total}/{score.maxScore} points
-          </p>
-        </div>
-
-        {/* Water temp */}
-        <div className="flex flex-col items-center justify-center p-6 bg-white rounded-xl shadow-sm">
-          <span className="text-3xl mb-1">🌡️</span>
-          <span className="text-2xl font-bold text-blue-900">
-            {waterTempF !== null ? `${Math.round(waterTempF)}°F` : '--'}
-          </span>
-          <span className="text-sm text-gray-500">Water Temp</span>
-        </div>
-
-        {/* Flow rate */}
-        <div className="flex flex-col items-center justify-center p-6 bg-white rounded-xl shadow-sm">
-          <span className="text-3xl mb-1">💧</span>
-          <span className="text-2xl font-bold text-blue-900">
-            {waterFlow ? `${(waterFlow.flowCfs / 1000).toFixed(0)}K` : '--'}
-          </span>
-          <span className="text-sm text-gray-500">CFS Flow</span>
-        </div>
+      {/* 3-Day Forecast Cards */}
+      <div className="grid grid-cols-3 gap-3 md:gap-4 mb-4">
+        {forecast.map((day, idx) => (
+          <ForecastCard key={day.date} forecast={day} isToday={idx === 0} />
+        ))}
       </div>
 
-      {/* Secondary info row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        {/* Tide */}
-        <div className="flex items-center gap-2 p-3 bg-white rounded-lg shadow-sm">
-          <span className="text-xl">🌊</span>
-          <div>
-            <p className="text-sm font-medium text-gray-900 capitalize">
-              {tide?.status || '--'}
-            </p>
-            <p className="text-xs text-gray-500">Tide</p>
-          </div>
+      {/* Flow rate banner */}
+      {flowCfs && (
+        <div className="flex items-center justify-center gap-2 bg-blue-50 rounded-lg py-2 px-4 mb-4">
+          <span className="text-lg">💧</span>
+          <span className="text-blue-900 font-medium">
+            Columbia River Flow: {(flowCfs / 1000).toFixed(0)}K CFS
+          </span>
         </div>
-
-        {/* Wind */}
-        <div className="flex items-center gap-2 p-3 bg-white rounded-lg shadow-sm">
-          <span className="text-xl">💨</span>
-          <div>
-            <p className="text-sm font-medium text-gray-900">
-              {weather ? `${weather.windSpeedMph} mph ${weather.windDirection}` : '--'}
-            </p>
-            <p className="text-xs text-gray-500">Wind</p>
-          </div>
-        </div>
-
-        {/* Sunrise */}
-        <div className="flex items-center gap-2 p-3 bg-white rounded-lg shadow-sm">
-          <span className="text-xl">🌅</span>
-          <div>
-            <p className="text-sm font-medium text-gray-900">
-              {sun?.sunrise || '--'}
-            </p>
-            <p className="text-xs text-gray-500">Sunrise</p>
-          </div>
-        </div>
-
-        {/* Sunset */}
-        <div className="flex items-center gap-2 p-3 bg-white rounded-lg shadow-sm">
-          <span className="text-xl">🌇</span>
-          <div>
-            <p className="text-sm font-medium text-gray-900">
-              {sun?.sunset || '--'}
-            </p>
-            <p className="text-xs text-gray-500">Sunset</p>
-          </div>
-        </div>
-      </div>
+      )}
 
       {/* Recommendation text */}
       <div className="bg-white p-4 rounded-lg shadow-sm">

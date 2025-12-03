@@ -13,12 +13,15 @@ interface NwsPointsResponse {
 }
 
 interface NwsForecastPeriod {
+  name: string;
+  startTime: string;
   temperature: number;
   temperatureUnit: string;
   windSpeed: string;
   windDirection: string;
   shortForecast: string;
   icon: string;
+  isDaytime: boolean;
 }
 
 interface NwsForecastResponse {
@@ -27,16 +30,14 @@ interface NwsForecastResponse {
   };
 }
 
+// Fetch current weather (hourly)
 export async function fetchWeather(): Promise<WeatherData | null> {
   try {
-    // First, get the forecast URL for our coordinates
     const pointsResponse = await fetch(
       `${NWS_API_URL}/points/${LATITUDE},${LONGITUDE}`,
       {
-        headers: {
-          'User-Agent': 'FishCount (fishcount@example.com)',
-        },
-        next: { revalidate: 3600 }, // Cache for 1 hour
+        headers: { 'User-Agent': 'FishCount (fishcount@example.com)' },
+        next: { revalidate: 3600 },
       }
     );
 
@@ -47,12 +48,9 @@ export async function fetchWeather(): Promise<WeatherData | null> {
     const pointsData: NwsPointsResponse = await pointsResponse.json();
     const forecastUrl = pointsData.properties.forecastHourly;
 
-    // Fetch the hourly forecast
     const forecastResponse = await fetch(forecastUrl, {
-      headers: {
-        'User-Agent': 'FishCount (fishcount@example.com)',
-      },
-      next: { revalidate: 1800 }, // Cache for 30 minutes
+      headers: { 'User-Agent': 'FishCount (fishcount@example.com)' },
+      next: { revalidate: 1800 },
     });
 
     if (!forecastResponse.ok) {
@@ -60,37 +58,93 @@ export async function fetchWeather(): Promise<WeatherData | null> {
     }
 
     const forecastData: NwsForecastResponse = await forecastResponse.json();
-    return parseWeatherData(forecastData);
+    return parseWeatherPeriod(forecastData.properties.periods[0]);
   } catch (error) {
     console.error('Error fetching weather data:', error);
     return null;
   }
 }
 
-function parseWeatherData(data: NwsForecastResponse): WeatherData | null {
-  const currentPeriod = data.properties.periods[0];
-  if (!currentPeriod) {
-    return null;
+// Fetch multi-day forecast (returns weather for next 3 days)
+export async function fetchWeatherForecast(days: number = 3): Promise<Map<string, WeatherData>> {
+  const result = new Map<string, WeatherData>();
+
+  try {
+    const pointsResponse = await fetch(
+      `${NWS_API_URL}/points/${LATITUDE},${LONGITUDE}`,
+      {
+        headers: { 'User-Agent': 'FishCount (fishcount@example.com)' },
+        next: { revalidate: 3600 },
+      }
+    );
+
+    if (!pointsResponse.ok) {
+      throw new Error(`NWS points API error: ${pointsResponse.status}`);
+    }
+
+    const pointsData: NwsPointsResponse = await pointsResponse.json();
+
+    // Use the daily forecast (not hourly) for multi-day
+    const forecastUrl = pointsData.properties.forecast;
+
+    const forecastResponse = await fetch(forecastUrl, {
+      headers: { 'User-Agent': 'FishCount (fishcount@example.com)' },
+      next: { revalidate: 1800 },
+    });
+
+    if (!forecastResponse.ok) {
+      throw new Error(`NWS forecast API error: ${forecastResponse.status}`);
+    }
+
+    const forecastData: NwsForecastResponse = await forecastResponse.json();
+
+    // Group by date, prefer daytime forecasts
+    const dateMap = new Map<string, NwsForecastPeriod>();
+
+    for (const period of forecastData.properties.periods) {
+      const date = period.startTime.split('T')[0];
+      // Prefer daytime periods
+      if (!dateMap.has(date) || period.isDaytime) {
+        dateMap.set(date, period);
+      }
+    }
+
+    // Get the first N days
+    let count = 0;
+    for (const [date, period] of dateMap) {
+      if (count >= days) break;
+      const weather = parseWeatherPeriod(period);
+      if (weather) {
+        result.set(date, weather);
+      }
+      count++;
+    }
+  } catch (error) {
+    console.error('Error fetching weather forecast:', error);
   }
 
-  // Parse wind speed (format: "10 mph" or "5 to 10 mph")
+  return result;
+}
+
+function parseWeatherPeriod(period: NwsForecastPeriod | undefined): WeatherData | null {
+  if (!period) return null;
+
   let windSpeedMph = 0;
-  const windMatch = currentPeriod.windSpeed.match(/(\d+)/);
+  const windMatch = period.windSpeed.match(/(\d+)/);
   if (windMatch) {
     windSpeedMph = parseInt(windMatch[1], 10);
   }
 
-  // Convert temperature if needed
-  let tempF = currentPeriod.temperature;
-  if (currentPeriod.temperatureUnit === 'C') {
-    tempF = (currentPeriod.temperature * 9) / 5 + 32;
+  let tempF = period.temperature;
+  if (period.temperatureUnit === 'C') {
+    tempF = (period.temperature * 9) / 5 + 32;
   }
 
   return {
     tempF,
     windSpeedMph,
-    windDirection: currentPeriod.windDirection,
-    conditions: currentPeriod.shortForecast,
-    icon: currentPeriod.icon,
+    windDirection: period.windDirection,
+    conditions: period.shortForecast,
+    icon: period.icon,
   };
 }

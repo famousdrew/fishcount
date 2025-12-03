@@ -27,6 +27,14 @@ export interface TideData {
   status: 'incoming' | 'outgoing' | 'slack';
   nextHighTime: string | null;
   nextLowTime: string | null;
+  nextHighLevel: number | null;
+  nextLowLevel: number | null;
+}
+
+// Water temperature from NOAA
+export interface WaterTempData {
+  tempF: number;
+  timestamp: string;
 }
 
 // Weather data from NWS
@@ -82,10 +90,22 @@ export interface DailyConditions {
   score: Score;
 }
 
+// Forecast for a single day (Today, Tomorrow, etc.)
+export interface DayForecast {
+  date: string;
+  dayLabel: string; // "Today", "Tomorrow", "Thursday"
+  weather: WeatherData | null;
+  tide: TideData | null;
+  sun: SunData | null;
+  moon: MoonData;
+  waterTempF: number | null;
+}
+
 // Full dashboard data
 export interface DashboardData {
   lastUpdated: string;
   currentConditions: DailyConditions | null;
+  forecast: DayForecast[]; // 3-day forecast
   historicalDays: DailyConditions[];
   recommendation: string;
 }

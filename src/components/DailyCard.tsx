@@ -1,11 +1,20 @@
 'use client';
 
-import { DailyConditions } from '@/lib/types';
+import { DailyConditions, TideData } from '@/lib/types';
 import { ScoreBadge } from './ScoreBadge';
 import { ScoreDots } from './ScoreDots';
 
 interface DailyCardProps {
   conditions: DailyConditions;
+}
+
+function formatTide(tide: TideData): string {
+  const direction = tide.status === 'incoming' ? 'In' : tide.status === 'outgoing' ? 'Out' : 'Slack';
+  const level = tide.nextHighLevel || tide.nextLowLevel;
+  if (level !== null) {
+    return `${direction} ${level.toFixed(1)}'`;
+  }
+  return direction;
 }
 
 export function DailyCard({ conditions }: DailyCardProps) {
@@ -69,7 +78,7 @@ export function DailyCard({ conditions }: DailyCardProps) {
           <ConditionItem
             icon="🌊"
             label="Tide"
-            value={tide?.status ? tide.status.charAt(0).toUpperCase() + tide.status.slice(1) : '--'}
+            value={tide ? formatTide(tide) : '--'}
           />
           <ConditionItem
             icon="💨"
