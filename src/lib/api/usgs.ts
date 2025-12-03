@@ -1,7 +1,8 @@
 import { WaterFlow } from '../types';
 
-// USGS Station: Columbia River Below Bonneville Dam
-const USGS_STATION = '14128870';
+// USGS Station: Columbia River at Vancouver, WA
+// Note: Station 14128870 (below Bonneville Dam) returns no data
+const USGS_STATION = '14144700';
 const USGS_API_URL = 'https://waterservices.usgs.gov/nwis/iv/';
 
 // Parameter codes:

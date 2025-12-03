@@ -18,6 +18,9 @@ export async function fetchDashboardData(): Promise<DashboardData> {
     fetchSunData(),
   ]);
 
+  const today = format(new Date(), 'yyyy-MM-dd');
+  const moonToday = getMoonPhase(new Date());
+
   // Build daily conditions for each day
   const historicalDays: DailyConditions[] = [];
 
@@ -25,28 +28,24 @@ export async function fetchDashboardData(): Promise<DashboardData> {
     const date = new Date(fishCount.date + 'T12:00:00');
     const moon = getMoonPhase(date);
 
-    // For historical days, we use the fish count data but current conditions for demo
-    // In production, you'd want historical weather/tide data too
-    const isToday = fishCount.date === format(new Date(), 'yyyy-MM-dd');
-    const isYesterday = fishCount.date === format(subDays(new Date(), 1), 'yyyy-MM-dd');
-
     // Fetch sun data for this specific date
+    const isToday = fishCount.date === today;
     const sunData = isToday ? sunToday : await fetchSunData(date);
 
     const dayConditions: DailyConditions = {
       date: fishCount.date,
       dayOfWeek: format(date, 'EEEE'),
       fishCount,
-      waterFlow: isToday || isYesterday ? waterFlow : null,
-      tide: isToday ? tide : null,
-      weather: isToday ? weather : null,
+      waterFlow: null, // Historical water flow not available
+      tide: null, // Historical tide not available
+      weather: null, // Historical weather not available
       sun: sunData,
       moon,
       score: calculateScore({
         fishCount,
-        waterFlow: isToday || isYesterday ? waterFlow : null,
-        weather: isToday ? weather : null,
-        tide: isToday ? tide : null,
+        waterFlow: null,
+        weather: null,
+        tide: null,
         moon,
       }),
     };
@@ -54,8 +53,28 @@ export async function fetchDashboardData(): Promise<DashboardData> {
     historicalDays.push(dayConditions);
   }
 
-  // Current conditions is the most recent day (first in the sorted list)
-  const currentConditions = historicalDays[0] || null;
+  // Build current conditions with real-time data
+  // Use the most recent fish count, but current environmental data
+  const latestFishCount = fishCounts[0] || null;
+  const currentConditions: DailyConditions | null = latestFishCount
+    ? {
+        date: today,
+        dayOfWeek: format(new Date(), 'EEEE'),
+        fishCount: latestFishCount,
+        waterFlow,
+        tide,
+        weather,
+        sun: sunToday,
+        moon: moonToday,
+        score: calculateScore({
+          fishCount: latestFishCount,
+          waterFlow,
+          weather,
+          tide,
+          moon: moonToday,
+        }),
+      }
+    : null;
 
   // Generate recommendation
   const recommendation = currentConditions
