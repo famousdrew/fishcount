@@ -79,20 +79,20 @@ function parseDartCsv(csvText: string, days: number): FishCount[] {
   const headers = lines[headerIndex].split(',').map(h => h.trim().toLowerCase());
   const dataLines = lines.slice(headerIndex + 1);
 
-  // Map column indices
+  // Map column indices - DART uses abbreviated column names
   const colIndex = {
     date: headers.findIndex(h => h === 'date'),
     chinookRun: headers.findIndex(h => h.includes('chinook run')),
-    chinook: headers.findIndex(h => h === 'chinook'),
-    jackChinook: headers.findIndex(h => h.includes('jack chinook')),
-    steelhead: headers.findIndex(h => h === 'steelhead'),
-    wildSteelhead: headers.findIndex(h => h.includes('wild steelhead')),
-    sockeye: headers.findIndex(h => h === 'sockeye'),
+    chinook: headers.findIndex(h => h === 'chin'),
+    jackChinook: headers.findIndex(h => h === 'jchin'),
+    steelhead: headers.findIndex(h => h === 'stlhd'),
+    wildSteelhead: headers.findIndex(h => h === 'wstlhd'),
+    sockeye: headers.findIndex(h => h === 'sock'),
     coho: headers.findIndex(h => h === 'coho'),
-    jackCoho: headers.findIndex(h => h.includes('jack coho')),
+    jackCoho: headers.findIndex(h => h === 'jcoho'),
     shad: headers.findIndex(h => h === 'shad'),
-    lamprey: headers.findIndex(h => h.includes('lamprey') && !h.includes('nighttime') && !h.includes('24')),
-    tempC: headers.findIndex(h => h.includes('tempc')),
+    lamprey: headers.findIndex(h => h === 'lmpryday'),
+    tempC: headers.findIndex(h => h === 'tempc'),
   };
 
   const fishCounts: FishCount[] = [];
