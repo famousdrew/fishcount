@@ -1,97 +1,65 @@
 import { fetchDashboardData } from '@/lib/api';
-import { Hero, DailyCard, TrendChart } from '@/components';
+import { VerdictBar, ConditionsGrid, FishCountsRow, ScoreBreakdown } from '@/components';
 
-export const revalidate = 3600; // Revalidate every hour
+export const revalidate = 900; // 15 min — conditions (flow, tide, wind) change throughout the day
 
 export default async function Home() {
-  const dashboardData = await fetchDashboardData();
+  const data = await fetchDashboardData();
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Header */}
-      <header className="bg-blue-900 text-white py-4 px-4 md:px-8">
-        <div className="max-w-6xl mx-auto">
-          <h1 className="text-2xl md:text-3xl font-bold">
-            Columbia River FishCount
-          </h1>
-          <p className="text-blue-200 text-sm md:text-base">
-            Bonneville Dam - Portland, OR Area
-          </p>
-        </div>
-      </header>
+    <div className="min-h-screen bg-slate-900">
+      <div className="max-w-[480px] mx-auto">
+        {/* Header */}
+        <header className="px-3 py-2 flex items-center justify-between border-b border-slate-800">
+          <div className="flex items-center gap-2">
+            <h1 className="text-sm font-semibold text-slate-200">FishCount</h1>
+            <span className="text-slate-600 text-sm">·</span>
+            <span className="text-slate-500 text-sm">Bonneville Dam</span>
+          </div>
+        </header>
 
-      {/* Main content */}
-      <main className="max-w-6xl mx-auto px-4 md:px-8 py-6 space-y-6">
-        {/* Hero section with 3-day forecast */}
-        <Hero
-          forecast={dashboardData.forecast}
-          recommendation={dashboardData.recommendation}
-          lastUpdated={dashboardData.lastUpdated}
-          flowCfs={dashboardData.currentConditions?.waterFlow?.flowCfs || null}
+        {/* Verdict */}
+        <VerdictBar
+          score={data.score}
+          headlineStat={data.headlineStat}
+          contextLine={data.contextLine}
+          lastUpdated={data.lastUpdated}
         />
 
-        {/* Trend chart with raw numbers */}
-        {dashboardData.historicalDays.length > 0 && (
-          <TrendChart days={dashboardData.historicalDays} />
-        )}
+        {/* Conditions */}
+        <ConditionsGrid
+          waterTempF={data.waterTempF}
+          waterFlow={data.waterFlow}
+          tide={data.tide}
+          weather={data.weather}
+          sun={data.sun}
+          moon={data.moon}
+          score={data.score}
+        />
 
-        {/* Daily cards */}
-        <section>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Recent Fish Counts
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {dashboardData.historicalDays.map((day) => (
-              <DailyCard key={day.date} conditions={day} />
-            ))}
-          </div>
-        </section>
+        {/* Fish counts */}
+        <FishCountsRow
+          fishCounts={data.fishCounts}
+          fishTrends={data.fishTrends}
+        />
+
+        {/* Score breakdown */}
+        <ScoreBreakdown score={data.score} />
 
         {/* Footer */}
-        <footer className="text-center text-sm text-gray-500 py-8 border-t border-gray-200">
-          <p>
-            Data sources:{' '}
-            <a
-              href="https://www.cbr.washington.edu/dart"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:underline"
-            >
-              DART/CBR
-            </a>
-            {' - '}
-            <a
-              href="https://waterdata.usgs.gov/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:underline"
-            >
-              USGS
-            </a>
-            {' - '}
-            <a
-              href="https://tidesandcurrents.noaa.gov/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:underline"
-            >
-              NOAA
-            </a>
-            {' - '}
-            <a
-              href="https://www.weather.gov/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:underline"
-            >
-              NWS
-            </a>
-          </p>
-          <p className="mt-2">
-            Built for the Columbia River fishing community
+        <footer className="px-3 py-4 border-t border-slate-800 text-center">
+          <p className="text-slate-600 text-xs">
+            Data:{' '}
+            <a href="https://www.cbr.washington.edu/dart" target="_blank" rel="noopener noreferrer" className="text-sky-500/60 hover:text-sky-400">DART</a>
+            {' · '}
+            <a href="https://waterdata.usgs.gov/" target="_blank" rel="noopener noreferrer" className="text-sky-500/60 hover:text-sky-400">USGS</a>
+            {' · '}
+            <a href="https://tidesandcurrents.noaa.gov/" target="_blank" rel="noopener noreferrer" className="text-sky-500/60 hover:text-sky-400">NOAA</a>
+            {' · '}
+            <a href="https://www.weather.gov/" target="_blank" rel="noopener noreferrer" className="text-sky-500/60 hover:text-sky-400">NWS</a>
           </p>
         </footer>
-      </main>
+      </div>
     </div>
   );
 }

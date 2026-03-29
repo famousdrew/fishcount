@@ -4,6 +4,7 @@ import { WaterFlow } from '../types';
 // Note: Station 14128870 (below Bonneville Dam) returns no data
 const USGS_STATION = '14144700';
 const USGS_API_URL = 'https://waterservices.usgs.gov/nwis/iv/';
+const USGS_DAILY_API_URL = 'https://waterservices.usgs.gov/nwis/dv/';
 
 // Parameter codes:
 // 00060 = Discharge (cubic feet per second)
@@ -48,6 +49,51 @@ export async function fetchWaterFlow(): Promise<WaterFlow | null> {
     console.error('Error fetching USGS data:', error);
     return null;
   }
+}
+
+// Fetch historical daily flow values
+export async function fetchDailyFlow(days: number = 14): Promise<Map<string, number>> {
+  const result = new Map<string, number>();
+  const now = new Date();
+  const start = new Date(now);
+  start.setDate(start.getDate() - days);
+
+  const fmt = (d: Date) => d.toISOString().split('T')[0];
+
+  const params = new URLSearchParams({
+    format: 'json',
+    sites: USGS_STATION,
+    parameterCd: '00060',
+    startDT: fmt(start),
+    endDT: fmt(now),
+  });
+
+  try {
+    const response = await fetch(`${USGS_DAILY_API_URL}?${params}`, {
+      next: { revalidate: 3600 },
+    });
+
+    if (!response.ok) return result;
+
+    const data: UsgsResponse = await response.json();
+
+    for (const series of data.value.timeSeries) {
+      const paramCode = series.variable.variableCode[0]?.value;
+      if (paramCode !== '00060') continue;
+
+      for (const val of series.values[0]?.value || []) {
+        const date = val.dateTime.split('T')[0];
+        const flow = parseFloat(val.value);
+        if (!isNaN(flow) && flow > 0) {
+          result.set(date, flow);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching USGS daily flow:', error);
+  }
+
+  return result;
 }
 
 function parseUsgsResponse(data: UsgsResponse): WaterFlow | null {

@@ -26,9 +26,9 @@ function parseTemp(value: string): number | null {
 
 function parseChinookRun(value: string): FishCount['chinookRun'] {
   const normalized = value.trim().toLowerCase();
-  if (normalized === 'spring') return 'Spring';
-  if (normalized === 'summer') return 'Summer';
-  if (normalized === 'fall') return 'Fall';
+  if (normalized === 'spring' || normalized === 'sp') return 'Spring';
+  if (normalized === 'summer' || normalized === 'su') return 'Summer';
+  if (normalized === 'fall' || normalized === 'fa') return 'Fall';
   return null;
 }
 

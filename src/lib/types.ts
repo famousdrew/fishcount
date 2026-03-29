@@ -56,25 +56,49 @@ export interface SunData {
 }
 
 // Moon phase data
+export type MoonPhase = 'New Moon' | 'Waxing Crescent' | 'First Quarter' | 'Waxing Gibbous' | 'Full Moon' | 'Waning Gibbous' | 'Last Quarter' | 'Waning Crescent';
+
 export interface MoonData {
-  phase: 'New Moon' | 'Waxing Crescent' | 'First Quarter' | 'Waxing Gibbous' | 'Full Moon' | 'Waning Gibbous' | 'Last Quarter' | 'Waning Crescent';
+  phase: MoonPhase;
   illumination: number;
   emoji: string;
 }
 
-// Scoring result
-export type ScoreStatus = 'go' | 'maybe' | 'skip';
+// Scoring v2
+export type ScoreStatus = 'go' | 'maybe' | 'skip' | 'insufficient';
+
+export interface ScoreFactor {
+  name: string;
+  weight: number;
+  score: number;       // 0-10
+  maxScore: 10;
+  reason: string;
+  available: boolean;  // false if data was missing
+}
 
 export interface Score {
-  total: number;
-  maxScore: number;
+  total: number;       // 0-10 weighted average
   status: ScoreStatus;
-  factors: {
-    name: string;
-    points: number;
-    maxPoints: number;
-    reason: string;
-  }[];
+  factors: ScoreFactor[];
+  availableWeight: number; // sum of weights for available factors
+}
+
+// Species season info
+export type TargetSpecies = 'chinook' | 'steelhead' | 'sockeye' | 'coho' | 'shad';
+
+export interface SeasonInfo {
+  species: TargetSpecies;
+  label: string;         // e.g. "Spring Chinook"
+  run?: string;          // e.g. "Spring", "Fall"
+}
+
+// Fish trend data
+export interface FishTrend {
+  species: string;
+  latestCount: number;
+  previousAvg: number;  // 3-day avg before latest
+  direction: 'up' | 'down' | 'stable';
+  changePercent: number;
 }
 
 // Combined daily data
@@ -90,22 +114,39 @@ export interface DailyConditions {
   score: Score;
 }
 
-// Forecast for a single day (Today, Tomorrow, etc.)
-export interface DayForecast {
+// Historical day with conditions (for /counts page)
+export interface HistoricalDay {
   date: string;
-  dayLabel: string; // "Today", "Tomorrow", "Thursday"
-  weather: WeatherData | null;
-  tide: TideData | null;
-  sun: SunData | null;
-  moon: MoonData;
+  dayOfWeek: string;
+  fishCount: FishCount;
+  flowCfs: number | null;
   waterTempF: number | null;
+  tideEvents: TideEvent[];
+  moon: MoonData;
+}
+
+export interface TideEvent {
+  time: string;   // "07:26"
+  type: 'H' | 'L';
+  level: number;  // feet
 }
 
 // Full dashboard data
 export interface DashboardData {
   lastUpdated: string;
-  currentConditions: DailyConditions | null;
-  forecast: DayForecast[]; // 3-day forecast
-  historicalDays: DailyConditions[];
-  recommendation: string;
+  score: Score;
+  // Real-time conditions
+  waterFlow: WaterFlow | null;
+  waterTempF: number | null;
+  tide: TideData | null;
+  weather: WeatherData | null;
+  sun: SunData | null;
+  moon: MoonData;
+  // Fish data
+  fishCounts: FishCount[];
+  fishTrends: FishTrend[];
+  primarySpecies: SeasonInfo;
+  // Headline pieces
+  headlineStat: string;
+  contextLine: string;
 }
