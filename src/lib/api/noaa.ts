@@ -1,4 +1,4 @@
-import { TideData, WaterTempData } from '../types';
+import { TideData, TideEvent, WaterTempData } from '../types';
 
 // NOAA Stations
 const ASTORIA_STATION = '9439040'; // Tides
@@ -265,4 +265,53 @@ function parseDayTides(predictions: NoaaPrediction[], dateStr: string): TideData
     nextHighLevel: bestHigh ? parseFloat(bestHigh.v) : null,
     nextLowLevel: bestLow ? parseFloat(bestLow.v) : null,
   };
+}
+
+// Fetch full tide events (H/L with times) for multiple days
+export async function fetchTideEventsForecast(days: number = 3): Promise<Map<string, TideEvent[]>> {
+  const result = new Map<string, TideEvent[]>();
+  const now = new Date();
+
+  const startDate = formatNoaaDate(now);
+  const endDate = new Date(now);
+  endDate.setDate(endDate.getDate() + days);
+  const endDateStr = formatNoaaDate(endDate);
+
+  try {
+    const params = new URLSearchParams({
+      station: ASTORIA_STATION,
+      product: 'predictions',
+      datum: 'MLLW',
+      units: 'english',
+      time_zone: 'lst_ldt',
+      application: 'fishcount',
+      format: 'json',
+      begin_date: startDate,
+      end_date: endDateStr,
+      interval: 'hilo',
+    });
+
+    const response = await fetch(`${NOAA_API_URL}?${params}`, {
+      next: { revalidate: 3600 },
+    });
+
+    if (!response.ok) return result;
+
+    const data: NoaaResponse = await response.json();
+    const predictions = data.predictions || [];
+
+    for (const pred of predictions) {
+      const [date, time] = pred.t.split(' ');
+      if (!result.has(date)) result.set(date, []);
+      result.get(date)!.push({
+        time: time.slice(0, 5),
+        type: pred.type as 'H' | 'L',
+        level: parseFloat(pred.v),
+      });
+    }
+  } catch (error) {
+    console.error('Error fetching tide events forecast:', error);
+  }
+
+  return result;
 }

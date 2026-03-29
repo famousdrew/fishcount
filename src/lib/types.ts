@@ -131,6 +131,17 @@ export interface TideEvent {
   level: number;  // feet
 }
 
+// Forecast day (today/tomorrow/etc)
+export interface ForecastDay {
+  date: string;
+  label: string;          // "Today", "Tomorrow", "Monday"
+  weather: WeatherData | null;
+  nightWeather: WeatherData | null;
+  tideEvents: TideEvent[];
+  sun: SunData | null;
+  moon: MoonData;
+}
+
 // Full dashboard data
 export interface DashboardData {
   lastUpdated: string;
@@ -146,6 +157,8 @@ export interface DashboardData {
   fishCounts: FishCount[];
   fishTrends: FishTrend[];
   primarySpecies: SeasonInfo;
+  // Forecast
+  forecast: ForecastDay[];
   // Headline pieces
   headlineStat: string;
   contextLine: string;

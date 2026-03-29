@@ -1,8 +1,9 @@
-import { DashboardData } from '../types';
+import { format, addDays } from 'date-fns';
+import { DashboardData, ForecastDay, TideEvent } from '../types';
 import { fetchFishCounts } from './dart';
 import { fetchWaterFlow } from './usgs';
-import { fetchTideData, fetchWaterTemp } from './noaa';
-import { fetchWeather } from './weather';
+import { fetchTideData, fetchWaterTemp, fetchTideEventsForecast } from './noaa';
+import { fetchWeather, fetchWeatherForecast } from './weather';
 import { fetchSunData } from './sun';
 import { getMoonPhase } from './moon';
 import { calculateScore, calculateFishTrends, getBestSeason, generateHeadlineStat, generateContextLine } from '../scoring';
@@ -18,14 +19,18 @@ async function safeFetch<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
 }
 
 export async function fetchDashboardData(): Promise<DashboardData> {
+  const now = new Date();
+
   // All fetches in parallel, each independently guarded
-  const [fishCounts, waterFlow, tide, weather, sunToday, waterTemp] = await Promise.all([
+  const [fishCounts, waterFlow, tide, weather, sunToday, waterTemp, weatherForecast, tideEventsForecast] = await Promise.all([
     safeFetch(() => fetchFishCounts(7), []),
     safeFetch(() => fetchWaterFlow(), null),
     safeFetch(() => fetchTideData(), null),
     safeFetch(() => fetchWeather(), null),
     safeFetch(() => fetchSunData(), null),
     safeFetch(() => fetchWaterTemp(), null),
+    safeFetch(() => fetchWeatherForecast(3), new Map()),
+    safeFetch(() => fetchTideEventsForecast(3), new Map()),
   ]);
 
   const moon = getMoonPhase();
@@ -54,6 +59,9 @@ export async function fetchDashboardData(): Promise<DashboardData> {
     season,
   });
 
+  // Build 3-day forecast
+  const forecast = await buildForecast(now, weather, sunToday, weatherForecast, tideEventsForecast);
+
   // Build headline pieces
   const headlineStat = generateHeadlineStat(fishTrends, season);
   const contextLine = generateContextLine({ tide, weather, sun: sunToday });
@@ -70,7 +78,45 @@ export async function fetchDashboardData(): Promise<DashboardData> {
     fishCounts,
     fishTrends,
     primarySpecies: season,
+    forecast,
     headlineStat,
     contextLine,
   };
+}
+
+async function buildForecast(
+  now: Date,
+  todayWeather: import('../types').WeatherData | null,
+  todaySun: import('../types').SunData | null,
+  weatherForecast: Map<string, import('../types').WeatherData>,
+  tideEventsForecast: Map<string, TideEvent[]>,
+): Promise<ForecastDay[]> {
+  const days: ForecastDay[] = [];
+
+  for (let i = 0; i < 3; i++) {
+    const date = addDays(now, i);
+    const dateStr = format(date, 'yyyy-MM-dd');
+    const isToday = i === 0;
+
+    let label: string;
+    if (i === 0) label = 'Today';
+    else if (i === 1) label = 'Tomorrow';
+    else label = format(date, 'EEEE');
+
+    const dayWeather = isToday ? todayWeather : (weatherForecast.get(dateStr) ?? null);
+    const sun = isToday ? todaySun : await safeFetch(() => fetchSunData(date), null);
+    const tideEvents = tideEventsForecast.get(dateStr) ?? [];
+
+    days.push({
+      date: dateStr,
+      label,
+      weather: dayWeather,
+      nightWeather: null,
+      tideEvents,
+      sun,
+      moon: getMoonPhase(date),
+    });
+  }
+
+  return days;
 }

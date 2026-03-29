@@ -1,5 +1,5 @@
 import { fetchDashboardData } from '@/lib/api';
-import { VerdictBar, ConditionsGrid, FishCountsRow, ScoreBreakdown } from '@/components';
+import { VerdictBar, ConditionsGrid, Forecast, FishCountsRow, ScoreBreakdown } from '@/components';
 
 export const revalidate = 900; // 15 min — conditions (flow, tide, wind) change throughout the day
 
@@ -36,6 +36,9 @@ export default async function Home() {
           moon={data.moon}
           score={data.score}
         />
+
+        {/* Forecast: Today / Tomorrow / Next Day */}
+        <Forecast forecast={data.forecast} />
 
         {/* Fish counts */}
         <FishCountsRow
