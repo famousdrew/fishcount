@@ -75,10 +75,10 @@ function Cell({ value, sublabel, label, borderColor }: {
   borderColor: string;
 }) {
   return (
-    <div className={`border-b border-r border-slate-700 border-l-2 ${borderColor} px-3 py-2`}>
-      <div className="text-slate-100 font-bold text-lg leading-tight">{value}</div>
-      {sublabel && <div className="text-slate-500 text-xs">{sublabel}</div>}
-      <div className="text-slate-500 text-[11px] uppercase tracking-wide">{label}</div>
+    <div className={`border-b border-r border-slate-700 border-l-2 ${borderColor} px-3 py-2.5`}>
+      <div className="text-slate-100 font-bold text-xl leading-tight">{value}</div>
+      {sublabel && <div className="text-slate-500 text-sm">{sublabel}</div>}
+      <div className="text-slate-500 text-xs uppercase tracking-wide">{label}</div>
     </div>
   );
 }

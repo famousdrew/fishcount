@@ -12,7 +12,7 @@ export function FishCountsRow({ fishCounts, fishTrends }: FishCountsProps) {
   if (fishCounts.length === 0) {
     return (
       <div className="border-t border-slate-700 px-3 py-3">
-        <p className="text-slate-500 text-sm">Fish counts unavailable</p>
+        <p className="text-slate-500 text-base">Fish counts unavailable</p>
       </div>
     );
   }
@@ -29,19 +29,19 @@ export function FishCountsRow({ fishCounts, fishTrends }: FishCountsProps) {
   const zeroSpecies = fishTrends.filter(t => t.latestCount === 0);
 
   return (
-    <div className="border-t border-slate-700 px-3 py-2">
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-slate-500 text-[11px] uppercase tracking-wide">
+    <div className="border-t border-slate-700 px-3 py-2.5">
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-slate-500 text-xs uppercase tracking-wide">
           Counts from {dateLabel}
         </span>
         <Link
           href="/counts"
-          className="text-sky-400 text-xs hover:text-sky-300 transition-colors"
+          className="text-sky-400 text-sm hover:text-sky-300 transition-colors"
         >
           details ▸
         </Link>
       </div>
-      <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
+      <div className="grid grid-cols-2 gap-x-4 gap-y-1">
         {species.map(t => (
           <CountItem key={t.species} trend={t} />
         ))}
@@ -59,8 +59,8 @@ function CountItem({ trend }: { trend: FishTrend }) {
 
   return (
     <div className="flex items-center justify-between py-0.5">
-      <span className="text-slate-400 text-sm truncate">{trend.species}</span>
-      <span className="text-slate-100 text-sm tabular-nums font-medium">
+      <span className="text-slate-400 text-base">{trend.species}</span>
+      <span className="text-slate-100 text-base tabular-nums font-medium">
         {trend.latestCount > 0 ? trend.latestCount.toLocaleString() : '–'}
         {arrow && <span className={`ml-1 ${arrowColor}`}>{arrow}</span>}
       </span>

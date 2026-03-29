@@ -14,36 +14,36 @@ export function ScoreBreakdown({ score }: ScoreBreakdownProps) {
     <div className="border-t border-slate-700">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full px-3 py-2 flex items-center justify-between text-slate-400 hover:text-slate-300 transition-colors"
+        className="w-full px-3 py-2.5 flex items-center justify-between text-slate-400 hover:text-slate-300 transition-colors"
       >
-        <span className="text-xs uppercase tracking-wide">Score Breakdown</span>
-        <span className="text-xs">{open ? '▾' : '▸'}</span>
+        <span className="text-sm uppercase tracking-wide">Score Breakdown</span>
+        <span className="text-sm">{open ? '▾' : '▸'}</span>
       </button>
 
       {open && (
         <div className="px-3 pb-3">
-          <table className="w-full text-sm">
+          <table className="w-full text-base">
             <thead>
               <tr className="text-slate-500 text-xs uppercase tracking-wide">
                 <th className="text-left py-1 font-medium">Factor</th>
                 <th className="text-right py-1 font-medium w-12">Wt</th>
-                <th className="text-right py-1 font-medium w-14">Score</th>
+                <th className="text-right py-1 font-medium w-16">Score</th>
                 <th className="text-left py-1 pl-3 font-medium">Detail</th>
               </tr>
             </thead>
             <tbody>
               {score.factors.map((factor) => (
                 <tr key={factor.name} className={`border-t border-slate-700/50 ${!factor.available ? 'opacity-40' : ''}`}>
-                  <td className="text-slate-300 py-1.5">{factor.name}</td>
-                  <td className="text-slate-500 text-right py-1.5 tabular-nums">{Math.round(factor.weight * 100)}%</td>
-                  <td className="text-right py-1.5 tabular-nums">
+                  <td className="text-slate-300 py-2">{factor.name}</td>
+                  <td className="text-slate-500 text-right py-2 tabular-nums">{Math.round(factor.weight * 100)}%</td>
+                  <td className="text-right py-2 tabular-nums">
                     {factor.available ? (
                       <span className={getScoreColor(factor.score)}>{factor.score}/10</span>
                     ) : (
                       <span className="text-slate-600">—</span>
                     )}
                   </td>
-                  <td className="text-slate-400 py-1.5 pl-3 text-xs truncate max-w-[140px]">{factor.reason}</td>
+                  <td className="text-slate-400 py-2 pl-3 text-sm truncate max-w-[160px]">{factor.reason}</td>
                 </tr>
               ))}
             </tbody>
