@@ -1,5 +1,6 @@
-import { format, addDays } from 'date-fns';
+import { addDays } from 'date-fns';
 import { DashboardData, ForecastDay, TideEvent } from '../types';
+import { nowPacific, todayPacific, dayName } from '../timezone';
 import { fetchFishCounts } from './dart';
 import { fetchWaterFlow } from './usgs';
 import { fetchTideData, fetchWaterTemp, fetchTideEventsForecast } from './noaa';
@@ -19,7 +20,7 @@ async function safeFetch<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
 }
 
 export async function fetchDashboardData(): Promise<DashboardData> {
-  const now = new Date();
+  const now = nowPacific();
 
   // All fetches in parallel, each independently guarded
   const [fishCounts, waterFlow, tide, weather, sunToday, waterTemp, weatherForecast, tideEventsForecast] = await Promise.all([
@@ -33,7 +34,7 @@ export async function fetchDashboardData(): Promise<DashboardData> {
     safeFetch(() => fetchTideEventsForecast(3), new Map()),
   ]);
 
-  const moon = getMoonPhase();
+  const moon = getMoonPhase(now);
 
   // Determine water temp: prefer USGS, fall back to NOAA, then DART
   let waterTempF: number | null = waterFlow?.waterTempF ?? null;
@@ -45,7 +46,7 @@ export async function fetchDashboardData(): Promise<DashboardData> {
   }
 
   // Season + trends
-  const season = getBestSeason(fishCounts);
+  const season = getBestSeason(fishCounts, now);
   const fishTrends = calculateFishTrends(fishCounts);
 
   // Score using real-time conditions + fish trends
@@ -95,13 +96,13 @@ async function buildForecast(
 
   for (let i = 0; i < 3; i++) {
     const date = addDays(now, i);
-    const dateStr = format(date, 'yyyy-MM-dd');
+    const dateStr = formatDateStr(date);
     const isToday = i === 0;
 
     let label: string;
     if (i === 0) label = 'Today';
     else if (i === 1) label = 'Tomorrow';
-    else label = format(date, 'EEEE');
+    else label = dayName(dateStr);
 
     const dayWeather = isToday ? todayWeather : (weatherForecast.get(dateStr) ?? null);
     const sun = isToday ? todaySun : await safeFetch(() => fetchSunData(date), null);
@@ -119,4 +120,12 @@ async function buildForecast(
   }
 
   return days;
+}
+
+// Format Date to yyyy-MM-dd without depending on timezone-unaware format()
+function formatDateStr(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
 }

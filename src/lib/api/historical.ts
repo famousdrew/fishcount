@@ -1,5 +1,5 @@
-import { format } from 'date-fns';
 import { HistoricalDay, TideEvent } from '../types';
+import { shortDayName, nowPacific } from '../timezone';
 import { fetchFishCounts } from './dart';
 import { fetchDailyFlow } from './usgs';
 import { getMoonPhase } from './moon';
@@ -21,7 +21,7 @@ export async function fetchHistoricalData(days: number = 14): Promise<Historical
 
     return {
       date: fc.date,
-      dayOfWeek: format(date, 'EEE'),
+      dayOfWeek: shortDayName(fc.date),
       fishCount: fc,
       flowCfs: dailyFlow.get(fc.date) ?? null,
       waterTempF,
@@ -34,7 +34,7 @@ export async function fetchHistoricalData(days: number = 14): Promise<Historical
 // Fetch tide high/low events for a date range
 async function fetchTideHistory(days: number): Promise<Map<string, TideEvent[]>> {
   const result = new Map<string, TideEvent[]>();
-  const now = new Date();
+  const now = nowPacific();
   const start = new Date(now);
   start.setDate(start.getDate() - days);
 

@@ -17,7 +17,8 @@ interface SunriseApiResponse {
 }
 
 export async function fetchSunData(date?: Date): Promise<SunData | null> {
-  const targetDate = date || new Date();
+  const { nowPacific } = await import('../timezone');
+  const targetDate = date || nowPacific();
   const dateStr = formatDate(targetDate);
 
   try {

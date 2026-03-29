@@ -19,7 +19,8 @@ interface NoaaResponse {
 
 // Fetch current water temperature from Longview station
 export async function fetchWaterTemp(): Promise<WaterTempData | null> {
-  const today = new Date();
+  const { nowPacific } = await import('../timezone');
+  const today = nowPacific();
   const dateStr = formatNoaaDate(today);
 
   try {
@@ -68,7 +69,8 @@ export async function fetchWaterTemp(): Promise<WaterTempData | null> {
 
 // Fetch tide data for a specific date
 export async function fetchTideData(date?: Date): Promise<TideData | null> {
-  const targetDate = date || new Date();
+  const { nowPacific } = await import('../timezone');
+  const targetDate = date || nowPacific();
   const startDate = formatNoaaDate(targetDate);
 
   const endDate = new Date(targetDate);
@@ -109,8 +111,9 @@ export async function fetchTideData(date?: Date): Promise<TideData | null> {
 
 // Fetch tide predictions for multiple days
 export async function fetchTideForecast(days: number = 3): Promise<Map<string, TideData>> {
+  const { nowPacific } = await import('../timezone');
   const result = new Map<string, TideData>();
-  const now = new Date();
+  const now = nowPacific();
 
   const startDate = formatNoaaDate(now);
   const endDate = new Date(now);
@@ -269,8 +272,9 @@ function parseDayTides(predictions: NoaaPrediction[], dateStr: string): TideData
 
 // Fetch full tide events (H/L with times) for multiple days
 export async function fetchTideEventsForecast(days: number = 3): Promise<Map<string, TideEvent[]>> {
+  const { nowPacific } = await import('../timezone');
   const result = new Map<string, TideEvent[]>();
-  const now = new Date();
+  const now = nowPacific();
 
   const startDate = formatNoaaDate(now);
   const endDate = new Date(now);

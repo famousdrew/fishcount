@@ -53,8 +53,9 @@ export async function fetchWaterFlow(): Promise<WaterFlow | null> {
 
 // Fetch historical daily flow values
 export async function fetchDailyFlow(days: number = 14): Promise<Map<string, number>> {
+  const { nowPacific } = await import('../timezone');
   const result = new Map<string, number>();
-  const now = new Date();
+  const now = nowPacific();
   const start = new Date(now);
   start.setDate(start.getDate() - days);
 

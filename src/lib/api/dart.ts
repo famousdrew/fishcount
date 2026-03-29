@@ -33,7 +33,8 @@ function parseChinookRun(value: string): FishCount['chinookRun'] {
 }
 
 export async function fetchFishCounts(days: number = 5): Promise<FishCount[]> {
-  const now = new Date();
+  const { nowPacific } = await import('../timezone');
+  const now = nowPacific();
   const startDate = new Date(now);
   startDate.setDate(startDate.getDate() - days - 1); // Extra day buffer
 
