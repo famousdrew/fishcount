@@ -1,7 +1,8 @@
 import { fetchDashboardData } from '@/lib/api';
 import { VerdictBar, ConditionsGrid, Forecast, FishCountsRow, ScoreBreakdown } from '@/components';
 
-export const revalidate = 900; // 15 min — conditions (flow, tide, wind) change throughout the day
+export const dynamic = 'force-dynamic'; // Always server-render — time-sensitive data
+export const revalidate = 900; // ISR: re-fetch data at most every 15 min
 
 export default async function Home() {
   const data = await fetchDashboardData();

@@ -21,6 +21,7 @@ async function safeFetch<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
 
 export async function fetchDashboardData(): Promise<DashboardData> {
   const now = nowPacific();
+  console.log(`[FishCount] Pacific time: ${now.toString()}, UTC: ${new Date().toISOString()}`);
 
   // All fetches in parallel, each independently guarded
   const [fishCounts, waterFlow, tide, weather, sunToday, waterTemp, weatherForecast, tideEventsForecast] = await Promise.all([
