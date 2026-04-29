@@ -5,9 +5,10 @@ import { ForecastDay, TideEvent } from '@/lib/types';
 
 interface ForecastProps {
   forecast: ForecastDay[];
+  tideStationName: string;
 }
 
-export function Forecast({ forecast }: ForecastProps) {
+export function Forecast({ forecast, tideStationName }: ForecastProps) {
   const [selectedIdx, setSelectedIdx] = useState(0);
 
   if (forecast.length === 0) return null;
@@ -76,7 +77,7 @@ export function Forecast({ forecast }: ForecastProps) {
         {selected.tideEvents.length > 0 && (
           <div>
             <div className="text-slate-500 text-xs uppercase tracking-wide mb-1.5">
-              Tides · Astoria
+              Tides · {tideStationName}
             </div>
             <div className="flex gap-3 flex-wrap">
               {selected.tideEvents.map((te, i) => (

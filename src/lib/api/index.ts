@@ -19,7 +19,7 @@ async function safeFetch<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
   }
 }
 
-export async function fetchDashboardData(): Promise<DashboardData> {
+export async function fetchDashboardData(stationId?: string): Promise<DashboardData> {
   const now = nowPacific();
   console.log(`[FishCount] Pacific time: ${now.toString()}, UTC: ${new Date().toISOString()}`);
 
@@ -27,12 +27,12 @@ export async function fetchDashboardData(): Promise<DashboardData> {
   const [fishCounts, waterFlow, tide, weather, sunToday, waterTemp, weatherForecast, tideEventsForecast] = await Promise.all([
     safeFetch(() => fetchFishCounts(7), []),
     safeFetch(() => fetchWaterFlow(), null),
-    safeFetch(() => fetchTideData(), null),
+    safeFetch(() => fetchTideData(undefined, stationId), null),
     safeFetch(() => fetchWeather(), null),
     safeFetch(() => fetchSunData(), null),
     safeFetch(() => fetchWaterTemp(), null),
     safeFetch(() => fetchWeatherForecast(3), new Map()),
-    safeFetch(() => fetchTideEventsForecast(3), new Map()),
+    safeFetch(() => fetchTideEventsForecast(3, stationId), new Map()),
   ]);
 
   const moon = getMoonPhase(now);

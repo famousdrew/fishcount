@@ -1,6 +1,8 @@
 'use client';
 
 import { WaterFlow, TideData, WeatherData, SunData, MoonData, Score } from '@/lib/types';
+import { TideStation } from '@/lib/stations';
+import { TideStationPicker } from './TideStationPicker';
 
 interface ConditionsGridProps {
   waterTempF: number | null;
@@ -10,6 +12,7 @@ interface ConditionsGridProps {
   sun: SunData | null;
   moon: MoonData;
   score: Score;
+  tideStation: TideStation;
 }
 
 function getFactorColor(factorName: string, score: Score): string {
@@ -20,7 +23,7 @@ function getFactorColor(factorName: string, score: Score): string {
   return 'border-red-500';
 }
 
-export function ConditionsGrid({ waterTempF, waterFlow, tide, weather, sun, moon, score }: ConditionsGridProps) {
+export function ConditionsGrid({ waterTempF, waterFlow, tide, weather, sun, moon, score, tideStation }: ConditionsGridProps) {
   const tideDisplay = tide
     ? tide.status === 'incoming' ? 'Incmg' : tide.status === 'outgoing' ? 'Outgng' : 'Slack'
     : '—';
@@ -53,11 +56,11 @@ export function ConditionsGrid({ waterTempF, waterFlow, tide, weather, sun, moon
         label="wind"
         borderColor={getFactorColor('Wind', score)}
       />
-      <Cell
+      <TideCell
         value={tideDisplay}
         sublabel={tideTime}
-        label="tide"
         borderColor={getFactorColor('Tide', score)}
+        station={tideStation}
       />
       <Cell
         value={sun?.sunrise || '—'}
@@ -79,6 +82,24 @@ function Cell({ value, sublabel, label, borderColor }: {
       <div className="text-slate-100 font-bold text-xl leading-tight">{value}</div>
       {sublabel && <div className="text-slate-500 text-sm">{sublabel}</div>}
       <div className="text-slate-500 text-xs uppercase tracking-wide">{label}</div>
+    </div>
+  );
+}
+
+function TideCell({ value, sublabel, borderColor, station }: {
+  value: string;
+  sublabel?: string;
+  borderColor: string;
+  station: TideStation;
+}) {
+  return (
+    <div className={`border-b border-r border-slate-700 border-l-2 ${borderColor} px-3 py-2.5 relative`}>
+      <div className="text-slate-100 font-bold text-xl leading-tight">{value}</div>
+      {sublabel && <div className="text-slate-500 text-sm">{sublabel}</div>}
+      <div className="text-slate-500 text-xs uppercase tracking-wide">tide</div>
+      <div className="mt-0.5">
+        <TideStationPicker current={station} />
+      </div>
     </div>
   );
 }

@@ -1,7 +1,6 @@
 import { TideData, TideEvent, WaterTempData } from '../types';
+import { DEFAULT_STATION_ID } from '../stations';
 
-// NOAA Stations
-const ASTORIA_STATION = '9439040'; // Tides
 const LONGVIEW_STATION = '9440422'; // Water temperature
 const NOAA_API_URL = 'https://api.tidesandcurrents.noaa.gov/api/prod/datagetter';
 
@@ -68,7 +67,7 @@ export async function fetchWaterTemp(): Promise<WaterTempData | null> {
 }
 
 // Fetch tide data for a specific date
-export async function fetchTideData(date?: Date): Promise<TideData | null> {
+export async function fetchTideData(date?: Date, stationId: string = DEFAULT_STATION_ID): Promise<TideData | null> {
   const { nowPacific } = await import('../timezone');
   const targetDate = date || nowPacific();
   const startDate = formatNoaaDate(targetDate);
@@ -80,7 +79,7 @@ export async function fetchTideData(date?: Date): Promise<TideData | null> {
   try {
     // Fetch high/low predictions
     const hiLoParams = new URLSearchParams({
-      station: ASTORIA_STATION,
+      station: stationId,
       product: 'predictions',
       datum: 'MLLW',
       units: 'english',
@@ -110,7 +109,7 @@ export async function fetchTideData(date?: Date): Promise<TideData | null> {
 }
 
 // Fetch tide predictions for multiple days
-export async function fetchTideForecast(days: number = 3): Promise<Map<string, TideData>> {
+export async function fetchTideForecast(days: number = 3, stationId: string = DEFAULT_STATION_ID): Promise<Map<string, TideData>> {
   const { nowPacific } = await import('../timezone');
   const result = new Map<string, TideData>();
   const now = nowPacific();
@@ -122,7 +121,7 @@ export async function fetchTideForecast(days: number = 3): Promise<Map<string, T
 
   try {
     const hiLoParams = new URLSearchParams({
-      station: ASTORIA_STATION,
+      station: stationId,
       product: 'predictions',
       datum: 'MLLW',
       units: 'english',
@@ -271,7 +270,7 @@ function parseDayTides(predictions: NoaaPrediction[], dateStr: string): TideData
 }
 
 // Fetch full tide events (H/L with times) for multiple days
-export async function fetchTideEventsForecast(days: number = 3): Promise<Map<string, TideEvent[]>> {
+export async function fetchTideEventsForecast(days: number = 3, stationId: string = DEFAULT_STATION_ID): Promise<Map<string, TideEvent[]>> {
   const { nowPacific } = await import('../timezone');
   const result = new Map<string, TideEvent[]>();
   const now = nowPacific();
@@ -283,7 +282,7 @@ export async function fetchTideEventsForecast(days: number = 3): Promise<Map<str
 
   try {
     const params = new URLSearchParams({
-      station: ASTORIA_STATION,
+      station: stationId,
       product: 'predictions',
       datum: 'MLLW',
       units: 'english',

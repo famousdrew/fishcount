@@ -1,11 +1,15 @@
+import { cookies } from 'next/headers';
 import { fetchDashboardData } from '@/lib/api';
 import { VerdictBar, ConditionsGrid, Forecast, FishCountsRow, ScoreBreakdown } from '@/components';
+import { getStation, TIDE_STATION_COOKIE } from '@/lib/stations';
 
 export const dynamic = 'force-dynamic'; // Always server-render — time-sensitive data
 export const revalidate = 900; // ISR: re-fetch data at most every 15 min
 
 export default async function Home() {
-  const data = await fetchDashboardData();
+  const cookieStore = await cookies();
+  const station = getStation(cookieStore.get(TIDE_STATION_COOKIE)?.value);
+  const data = await fetchDashboardData(station.id);
 
   return (
     <div className="min-h-screen bg-slate-900">
@@ -36,10 +40,11 @@ export default async function Home() {
           sun={data.sun}
           moon={data.moon}
           score={data.score}
+          tideStation={station}
         />
 
         {/* Forecast: Today / Tomorrow / Next Day */}
-        <Forecast forecast={data.forecast} />
+        <Forecast forecast={data.forecast} tideStationName={station.name} />
 
         {/* Fish counts */}
         <FishCountsRow
