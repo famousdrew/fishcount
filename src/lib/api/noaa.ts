@@ -189,13 +189,18 @@ function parseTideData(hiLoData: NoaaResponse, targetDate: Date): TideData | nul
   let nextHighLevel: number | null = null;
   let nextLowLevel: number | null = null;
   let currentLevel = 0;
+  let prevPred: NoaaPrediction | null = null;
+  let nextPred: NoaaPrediction | null = null;
 
   for (const pred of hiLoPredictions) {
     const predTime = new Date(pred.t.replace(' ', 'T'));
     if (predTime <= now) {
       currentLevel = parseFloat(pred.v) || 0;
+      prevPred = pred;
       continue;
     }
+
+    if (!nextPred) nextPred = pred;
 
     if (pred.type === 'H' && !nextHighTime) {
       nextHighTime = pred.t;
@@ -219,6 +224,8 @@ function parseTideData(hiLoData: NoaaResponse, targetDate: Date): TideData | nul
     status = 'outgoing';
   }
 
+  const currentRateFtPerHr = estimateRate(prevPred, nextPred, now);
+
   return {
     currentLevel,
     status,
@@ -226,7 +233,26 @@ function parseTideData(hiLoData: NoaaResponse, targetDate: Date): TideData | nul
     nextLowTime,
     nextHighLevel,
     nextLowLevel,
+    currentRateFtPerHr,
   };
+}
+
+// Sine-approximated rate of change between bracketing H/L tides.
+// Tide level ≈ midpoint + amplitude × cos(π × elapsed / cycleHours),
+// so dLevel/dt ≈ -amplitude × (π / cycleHours) × sin(π × t/cycle), with sign
+// flipped (+ rising / − falling) based on which side we're on.
+function estimateRate(prev: NoaaPrediction | null, next: NoaaPrediction | null, now: Date): number | null {
+  if (!prev || !next || !prev.type || !next.type || prev.type === next.type) return null;
+  const prevTime = new Date(prev.t.replace(' ', 'T')).getTime();
+  const nextTime = new Date(next.t.replace(' ', 'T')).getTime();
+  const cycleHours = (nextTime - prevTime) / 3_600_000;
+  if (cycleHours <= 0) return null;
+  const elapsedHours = (now.getTime() - prevTime) / 3_600_000;
+  const amplitude = (parseFloat(next.v) - parseFloat(prev.v)) / 2;
+  const peakRate = (Math.PI * Math.abs(amplitude)) / cycleHours;
+  const sineFactor = Math.sin((Math.PI * elapsedHours) / cycleHours);
+  const sign = next.type === 'H' ? 1 : -1;
+  return sign * peakRate * sineFactor;
 }
 
 function parseDayTides(predictions: NoaaPrediction[], dateStr: string): TideData | null {
@@ -266,6 +292,7 @@ function parseDayTides(predictions: NoaaPrediction[], dateStr: string): TideData
     nextLowTime: bestLow?.t || null,
     nextHighLevel: bestHigh ? parseFloat(bestHigh.v) : null,
     nextLowLevel: bestLow ? parseFloat(bestLow.v) : null,
+    currentRateFtPerHr: null,
   };
 }
 

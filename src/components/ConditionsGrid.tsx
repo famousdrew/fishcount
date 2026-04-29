@@ -34,6 +34,10 @@ export function ConditionsGrid({ waterTempF, waterFlow, tide, weather, sun, moon
       ? formatShortTime(tide.nextLowTime)
       : '';
 
+  const tideRate = tide?.currentRateFtPerHr != null
+    ? `${Math.abs(tide.currentRateFtPerHr).toFixed(1)}ft/hr`
+    : '';
+
   return (
     <div className="grid grid-cols-3 border-t border-slate-700">
       <Cell
@@ -58,7 +62,7 @@ export function ConditionsGrid({ waterTempF, waterFlow, tide, weather, sun, moon
       />
       <TideCell
         value={tideDisplay}
-        sublabel={tideTime}
+        sublabel={[tideRate, tideTime].filter(Boolean).join(' · ')}
         borderColor={getFactorColor('Tide', score)}
         station={tideStation}
       />

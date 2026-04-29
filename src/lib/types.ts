@@ -29,6 +29,9 @@ export interface TideData {
   nextLowTime: string | null;
   nextHighLevel: number | null;
   nextLowLevel: number | null;
+  // Estimated current rate of change in ft/hr, signed (+ rising, - falling).
+  // Sine-approximated from surrounding H/L bracket.
+  currentRateFtPerHr: number | null;
 }
 
 // Water temperature from NOAA
